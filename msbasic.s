@@ -61,7 +61,7 @@ CLRCH	:= $FFCC
 CHRIN   := serial_getc_echo
 ;CHROUT	:= $FFD2
 CHROUT  := serial_putc
-LOAD	:= $FFD5
+;LOAD	:= $FFD5
 SAVE	:= $FFD8
 VERIFY	:= $FFDB
 SYS		:= $FFDE
@@ -146,3 +146,4 @@ CRLF_2 := LF
 .include "basic/trig.s"
 .include "basic/init.s"
 .include "basic/extra.s"
+.include "basic/r8load.s"
