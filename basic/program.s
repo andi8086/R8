@@ -39,9 +39,7 @@ L2329:
         jsr     OUTDO
 .ifdef CONFIG_SMALL_ERROR
         lda     ERROR_MESSAGES+1,x
-  .ifdef KBD
         and     #$7F
-  .endif
         jsr     OUTDO
 .else
         inx
