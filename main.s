@@ -71,7 +71,7 @@ _serial_puts_next:  LDA (ZPG_STRPOINTER),Y
                     INY
                     BNE _serial_puts_next
 _serial_puts_end:   RTS                     
-                     
+
 serial_putc:
     ;----------------------------------------------
     ; send a character via 6551 ACIA
@@ -98,6 +98,16 @@ serial_getc_echo:   JSR serial_getc
 
 .export kernal_load_file
 
+printn:
+                    LDA #0
+                    TAY
+printn2:
+                    LDA (ZPG_STRPOINTER),Y
+                    JSR serial_putc
+                    INY
+                    DEX
+                    BNE printn2
+                    RTS
     ;----------------------------------------------
     ; KERNAL FILE I/O: LOAD FILE
     ;
@@ -106,9 +116,39 @@ serial_getc_echo:   JSR serial_getc
     ;----------------------------------------------
 kernal_load_file:   ; do not scramble zeropage!
                     ; this function is also called from BASIC
+                    LDA #0
+                    TAY
+                    CPX #2   ; file name only one char?
+                    BNE lf_cont
+                    LDA #'$'
+                    CMP (ZPG_STRPOINTER),Y   ; is it a $?
+                    BNE lf_cont
+                    JMP kernal_disk_index    ; load disk index
+lf_cont:
+                    LDA ZPG_STRPOINTER
+                    PHA
+                    LDA ZPG_STRPOINTER+1
+                    PHA
+                    LDA #<loadmsg
+                    STA ZPG_STRPOINTER
+                    LDA #>loadmsg
+                    STA ZPG_STRPOINTER+1
+                    JSR _serial_puts
+                    PLA
+                    STA ZPG_STRPOINTER+1
+                    PLA
+                    STA ZPG_STRPOINTER
+                    JSR printn
+                    SEC  ; set carry flag to signal load error
+                    RTS
 
-
-
+kernal_disk_index:
+                    LDA #<loadidxmsg
+                    STA ZPG_STRPOINTER
+                    LDA #>loadidxmsg
+                    STA ZPG_STRPOINTER+1
+                    JSR _serial_puts
+                    CLC ; simulate success
                     RTS
 
 __nmi:
@@ -123,8 +163,10 @@ startmsg:
 .byte $0A,$0D,"REICHEL R8",$0A,$0D,"6502 CPU @ 2 MHz",$0A,$0D,"32K RAM",$0A,$0D,$00
 wozmonmsg:
 .byte "MONITOR (c)1976 Steve Wozniak", $0A, $0D, "ADAPTED 2017 Andreas J. Reichel", $0A, $0D, $00
-
-
+loadmsg:
+.byte "Load File ",00
+loadidxmsg:
+.byte "Load Index",00
 
     .SEGMENT "STAMP"
     .byte "REICHEL R8"
