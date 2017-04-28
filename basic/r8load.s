@@ -1,5 +1,6 @@
 .segment "BASCODE"
 
+.import kernal_load_file
 ; ----------------------------------------------------------------------------
 ; "LOAD" STATEMENT
 ; ----------------------------------------------------------------------------
@@ -20,7 +21,7 @@ LSTRPRT:
         inx                     ; now X can be decreased until zero,
                                 ; and with increasing Y,
                                 ; (INDEX),Y is the letter of the string
-       ; jsr KERNAL_LOAD_FILE 
+        jsr kernal_load_file
         jsr     CHRGOT
 LOADEND:
         rts

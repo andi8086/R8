@@ -94,6 +94,23 @@ serial_getc_echo:   JSR serial_getc
                     JSR serial_putc
                     RTS
 
+.SEGMENT "OSCODE"
+
+.export kernal_load_file
+
+    ;----------------------------------------------
+    ; KERNAL FILE I/O: LOAD FILE
+    ;
+    ; file name in (A) (A = ZP offset of str pointer)
+    ; X = length of filename
+    ;----------------------------------------------
+kernal_load_file:   ; do not scramble zeropage!
+                    ; this function is also called from BASIC
+
+
+
+                    RTS
+
 __nmi:
     NOP
     RTI

@@ -20,10 +20,10 @@ CONFIG_PEEK_SAVE_LINNUM := 1
 CONFIG_SCRTCH_ORDER := 2
 
 ; zero page
-ZP_START1 = $00
-ZP_START2 = $0D
-ZP_START3 = $03
-ZP_START4 = $13
+ZP_START1 = $40
+ZP_START2 = $4D
+ZP_START3 = $43
+ZP_START4 = $53
 
 ; extra/override ZP variables
 CURDVC			:= $000E
