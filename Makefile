@@ -15,7 +15,9 @@ all: rom.bin
 
 rom.bin: $(OBJS)
 	$(LD) $^ -C rom.cfg -o $@ -m rom.map
-
+	$(eval BASIC_ENTRY := $(shell grep '^INIT\ ' rom.map | sed -r 's/ +/ /g' | cut -d' ' -f2))
+	@echo
+	@echo Entry point of BASIC is $(BASIC_ENTRY)
 msbasic.o: msbasic.s
 	$(AS) -I $(INCLUDE) -D cbmbasic2 $< -o $@
 
