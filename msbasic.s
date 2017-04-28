@@ -52,11 +52,11 @@ ENTROPY = $E844
 .import serial_putc  ; AJR
 .import serial_getc_echo ; AJR
 ; monitor functions
-OPEN	:= $FFC0
-CLOSE	:= $FFC3
-CHKIN	:= $FFC6
-CHKOUT	:= $FFC9
-CLRCH	:= $FFCC
+;OPEN	:= $FFC0
+;CLOSE	:= $FFC3
+;CHKIN	:= $FFC6
+;CHKOUT	:= $FFC9
+;CLRCH	:= $FFCC
 ;CHRIN	:= $FFCF
 CHRIN   := serial_getc_echo
 ;CHROUT	:= $FFD2
@@ -147,3 +147,4 @@ CRLF_2 := LF
 .include "basic/init.s"
 .include "basic/extra.s"
 .include "basic/r8load.s"
+.include "basic/r8file.s"

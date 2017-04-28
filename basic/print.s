@@ -1,16 +1,5 @@
 .segment "BASCODE"
 
-.ifdef AIM65
-PRINT:
-        lda     PRIFLG
-        sta     ZBE
-        jsr     L297E
-LB8B1:
-        lda     ZBE
-        sta     PRIFLG
-        rts
-.endif
-
 PRSTRING:
         jsr     STRPRT
 L297E:
@@ -19,30 +8,16 @@ L297E:
 ; ----------------------------------------------------------------------------
 ; "PRINT" STATEMENT
 ; ----------------------------------------------------------------------------
-.ifndef AIM65
 PRINT:
-.endif
         beq     CRDO
 PRINT2:
         beq     L29DD
-.ifdef AIM65
-        jsr     LB89D
-        beq     L29DD
-.endif
         cmp     #TOKEN_TAB
         beq     L29F5
         cmp     #TOKEN_SPC
-.ifdef CONFIG_2
         clc	; also AppleSoft II
-.endif
         beq     L29F5
         cmp     #','
-; Pre-KIM had no CLC. KIM added the CLC
-; here. Post-KIM moved the CLC up...
-; (makes no sense on KIM, liveness = 0)
-.if .def(CONFIG_11A) && (!.def(CONFIG_2))
-        clc
-.endif
         beq     L29DE
         cmp     #$3B
         beq     L2A0D
@@ -55,19 +30,13 @@ PRINT2:
         jsr     OUTSP
         bne     L297E ; branch always
 
-.ifndef KBD
 L29B9:
-  .ifdef CBM2
         lda     #$00
         sta     INPUTBUFFER,x
         ldx     #<(INPUTBUFFER-1)
         ldy     #>(INPUTBUFFER-1)
-  .endif
-  .ifdef CONFIG_FILE
         lda     CURDVC
         bne     L29DD
-  .endif
-.endif
 
 
 CRDO:
@@ -78,9 +47,6 @@ CRDO:
 LC9D8:
 .endif
         lda     #CRLF_1
-.ifndef CONFIG_CBM_ALL
-        sta     POSX
-.endif
         jsr     OUTDO
 CRDO2:
         lda     #CRLF_2
