@@ -1,4 +1,4 @@
-
+INCLUDE = /usr/bin/share/cc65/asminc
 
 OBJS = 	main.o \
 		math2.o \
@@ -7,16 +7,20 @@ OBJS = 	main.o \
 		wozmon.o \
         msbasic.o 
 
+AS = ca65
+
+LD = ld65
+
 all: rom.bin
 
 rom.bin: $(OBJS)
-	ld65 $^ -C rom.cfg -o $@ -m rom.map
+	$(LD) $^ -C rom.cfg -o $@ -m rom.map
 
 msbasic.o: msbasic.s
-	ca65 -D cbmbasic2 $< -o $@
+	$(AS) -I $(INCLUDE) -D cbmbasic2 $< -o $@
 
 %.o: %.s
-	ca65 $<
+	$(AS) -I $(INCLUDE) $<
 
 clean:
 	rm *.o rom.bin
