@@ -1,0 +1,209 @@
+
+connector       Manual          Measured
+1               GND             VSS                         n.c.
+2 x no pin                                                  n.c.
+3               !RESTORE                                    n.c. Controller Board
+4 no wire       +5V             VCC                         n.c.
+5               ROW3 (PB3)      PB3                        PD3
+6               ROW6 (PB6)      PB6                        PD6
+7               ROW5 (PB5)      PB5                        PD5
+8               ROW4 (PB4)      PB4                        PD4
+9               ROW7 (PB7)      PB7                        PD7
+10              ROW2 (PB2)      PB2                        PD2
+11              ROW1 (PB1)      PB1                        PD1
+12              ROW0 (PB0)      PB0                        PD0
+13              COL0 (PA0)      PA0                        PC0
+14              COL6 (PA6)      PA6                        PC6
+15              COL5 (PA5)      PA5                        PC5
+16              COL4 (PA4)      PA4                        PC4
+17              COL3 (PA3)      PA3                        PC3
+18              COL2 (PA2)      PA2                        PC2
+19              COL1 (PA1)      PA1                        PC1
+20              COL7 (PA7)      PA7                        PC7
+
+
+error1:  col starts with 1, not 0 and goes till 8 instead of 7
+error2:  row starts with 2 instead of 0 ?
+
+
+
+                            VCC
+                            GND
+                        GND
+
+
+
+
+                            
+                            
+
+
+              x  x   x   x
+
+                         RESET  
+          
+          MISO  MOSI SCK VCC
+
+
+
+            Atmega16L
+        
+           PC0      PD7
+           ..       ..
+           PC7      PD0
+
+
+
+
+
+Annahme: A0 ist am Chip
+
+ESC     5
+1       6
+2       7
+3       E
+4       F
+5       16
+6       17
+7       1E
+8       1F
+9       26
+0       27
++       2E
+-       2F
+Pfund   36
+CLR     37
+DEL     3E
+CTRL    4
+Q       0
+W       D
+E       8
+R       15
+T       10
+Y       1D
+U       18
+I       25
+O       20
+P       2D
+@       28
+*       35
+PI      30
+RESTORE -
+RUN     3
+SHIFT LOCK  B
+A       C
+S       9
+D       14
+F       11
+G       1C
+H       19
+J       24
+K       21
+L       2C
+(       29
+)       34
+=       31
+RETURN  3D
+COMMODORE   1
+SHIFT LEFT  B
+Z       6
+X       13
+C       12
+V       1B
+B       1A
+N       23
+M       22
+<       2B
+>       2A
+?       33
+SHIFT RIGHT 32
+UP      3B
+LEFT    3C
+SPACE   2
+F1      36
+F3      39
+F5      38
+F7      3F
+
+**********************************************************************
+
+                            With Shift
+Q           00          51          71
+COMMODORE   01          01          02
+SPACE       02          20          10
+RUN         03          03          09
+CTRL        04                           set bit 7             
+ESC         05          1B          7F
+1           06          31          21
+2           07          32          22
+E           08          45          65
+S           09          53          73
+Z           0A          5A          7A
+SHIFT LEFT  0B       
+SHIFT LOCK  0B
+A           0C          41          61
+3           0E          33          23
+W           0D          57          64
+4           0F          34          24
+T           10          54          74
+F           11          46          66
+C           12          43          63
+X           13          58          78
+D           14          44          64
+R           15          52          72
+5           16          35          25
+6           17          36          26
+U           18          55          75
+H           19          48          68
+B           1A          42          62
+V           1B          56          76
+G           1C          47          67
+Y           1D          59          79
+7           1E          37          27
+8           1F          38          28
+O           20          4F          29
+K           21          4B          6B
+M           22          4D          6D
+N           23          4E          6E
+J           24          4A          6A
+I           25          49          69
+9           26          39          29
+0           27          30          7C
+@           28          40          7B
+(           29          3A          5B
+>           2A          2E          3E
+<           2B          2C          3C
+L           2C          4C          6C
+P           2D          50          70
++           2E          2B          5E
+-           2F          2D          5F 
+PI          30          1D          1E
+=           31          3D          5C
+SHIFT RIGHT 32      
+?           33          2F          3F
+)           34          3B          5D
+*           35          2A          7D
+Pfund       36          26          7E
+CLR         37          0B          0C           
+F5          38          15          16
+F3          39          13          14
+F1          3A          11          12
+UP          3B          04          06
+LEFT        3C          05          07
+RETURN      3D          0D          0A
+DEL         3E          08          0E
+F7          3F          17          18          
+RESTORE -
+
+
+
+scantable:
+.db 0x51,0x01,0x20,0x03,0x00,0x1B,0x31,0x32,0x45,0x53,0x5A,0x00,0x41,0x33,0x57,0x34
+.db 0x54,0x46,0x43,0x58,0x44,0x52,0x35,0x36,0x55,0x48,0x42,0x56,0x47,0x59,0x37,0x38
+.db 0x4F,0x4B,0x4D,0x4E,0x4A,0x49,0x39,0x30,0x40,0x3A,0x2E,0x2C,0x4C,0x50,0x2B,0x2D
+.db 0x1D,0x3D,0x00,0x2F,0x3B,0x2A,0x26,0x0B,0x15,0x13,0x11,0x04,0x05,0x0D,0x08,0x17
+
+.db 0x71,0x02,0x10,0x09,0x00,0x7F,0x21,0x22,0x65,0x73,0x7A,0x00,0x61,0x23,0x64,0x24
+.db 0x74,0x66,0x63,0x78,0x64,0x72,0x25,0x26,0x75,0x68,0x62,0x76,0x67,0x79,0x27,0x28
+.db 0x29,0x6B,0x6D,0x6E,0x6A,0x69,0x29,0x7C,0x7B,0x5B,0x3E,0x3C,0x6C,0x70,0x5E,0x5F
+.db 0x1E,0x5C,0x00,0x3F,0x5D,0x7D,0x7E,0x0C,0x16,0x14,0x12,0x06,0x07,0x0A,0x0E,0x18
