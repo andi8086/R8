@@ -119,39 +119,19 @@ LC9B0:
 ; "INPUT" STATEMENT
 ; ----------------------------------------------------------------------------
 INPUT:
-.ifndef KBD
         lsr     Z14
-.endif
-.ifdef AIM65
-        lda     PRIFLG
-        sta     ZBE
-        jsr     LCFFA
-.endif
-        cmp     #$22
-.ifdef SYM1
-        bne     LC9B0
-.else
-        bne     L2A9E
-.endif
-        jsr     STRTXT
-        lda     #$3B
-        jsr     SYNCHR
-        jsr     STRPRT
+        cmp     #$22        ; is first character a "?
+        bne     L2A9E       ; no, jump to L2A9E
+        jsr     STRTXT      ; prepare immediate string
+        lda     #$3B        ; is character after string a ;?
+        jsr     SYNCHR      ; do a syntax check
+        jsr     STRPRT      ; output string
 L2A9E:
         jsr     ERRDIR
         lda     #$2C
         sta     INPUTBUFFER-1
 LCAF8:
-.ifdef APPLE
-        jsr     INLINX
-.elseif .def(SYM1)
-        jsr     INLIN
-.else
         jsr     NXIN
-.endif
-.ifdef KBD
-        bmi     L2ABE
-.else
   .ifdef CONFIG_FILE
         lda     CURDVC
         beq     LCB0C
@@ -168,21 +148,10 @@ LCB0C:
         lda     CURDVC
         bne     LCAF8
   .endif
-  .ifdef CONFIG_CBM1_PATCHES
-        jmp     PATCH1
-  .else
         clc
         jmp     CONTROL_C_TYPED
-  .endif
-.endif
 
 NXIN:
-.ifdef KBD
-        jsr     INLIN
-        bmi     RTS20
-        pla
-        jmp     LE86C
-.else
   .ifdef CONFIG_FILE
         lda     CURDVC
         bne     LCB21
@@ -191,7 +160,6 @@ NXIN:
         jsr     OUTSP
 LCB21:
         jmp     INLIN
-.endif
 
 ; ----------------------------------------------------------------------------
 ; "GETC" STATEMENT
