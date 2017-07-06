@@ -137,11 +137,11 @@ GotByte:     cmp #ESC        ; quitting?
                 bne GotByte1    ; no
 ;       lda #$FE        ; Error code in "A" of desired
 ;                brk         ; YES - do BRK or change to RTS if desired
-        rts
+        jmp $F000
 GotByte1:        cmp #SOH        ; start of block?
         beq BegBlk      ; yes
         cmp #EOT        ;
-        bne BadCrc      ; Not SOH or EOT, so flush buffer & send NAK    
+        ;bne BadCrc      ; Not SOH or EOT, so flush buffer & send NAK    
         jmp Done        ; EOT - all done!
 BegBlk:      ldx #$00
 GetBlk:      lda #$ff        ; 3 sec window to receive characters
@@ -160,7 +160,7 @@ GetBlk2:     sta Rbuff,x     ; good char, save it in the rcv buffer
         jsr Flush       ; mismatched - flush buffer and then do BRK
 ;       lda #$FD        ; put error code in "A" if desired
 ;        brk         ; unexpected block # - fatal error - BRK or RTS
-        rts
+        jmp $F800
 GoodBlk1:    eor #$ff        ; 1's comp of block #
         inx         ;
         cmp Rbuff,x     ; compare with expected 1's comp of block #
@@ -169,20 +169,21 @@ GoodBlk1:    eor #$ff        ; 1's comp of block #
         jsr     Flush       ; mismatched - flush buffer and then do BRK
 ;       lda #$FC        ; put error code in "A" if desired
 ;        brk         ; bad 1's comp of block#    
-        rts
+        jmp $F800
 GoodBlk2:    ldy #$02        ; 
 CalcCrc:     lda Rbuff,y     ; calculate the CRC for the 128 bytes of data   
-        jsr UpdCrc      ; could inline sub here for speed
+        ; jsr UpdCrc      ; could inline sub here for speed
         iny         ;
-        cpy #$82        ; 128 bytes
-        bne CalcCrc     ;
-        lda Rbuff,y     ; get hi CRC from buffer
-        cmp crch        ; compare to calculated hi CRC
-        bne BadCrc      ; bad crc, send NAK
-        iny         ;
-        lda Rbuff,y     ; get lo CRC from buffer
-        cmp crc     ; compare to calculated lo CRC
-        beq GoodCrc     ; good CRC
+        ;cpy #$82        ; 128 bytes
+        ;bne CalcCrc     ;
+        ;lda Rbuff,y     ; get hi CRC from buffer
+        ;cmp crch        ; compare to calculated hi CRC
+        ;bne BadCrc      ; bad crc, send NAK
+        ;iny         ;
+        ;lda Rbuff,y     ; get lo CRC from buffer
+        ;cmp crc     ; compare to calculated lo CRC
+        ;beq GoodCrc     ; good CRC
+        jmp GoodCrc
 BadCrc:      jsr Flush       ; flush the input port
         lda #NAK        ;
         jsr Put_Chr     ; send NAK to resend block
