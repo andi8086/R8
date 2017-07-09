@@ -137,7 +137,7 @@ GotByte:     cmp #ESC        ; quitting?
                 bne GotByte1    ; no
 ;       lda #$FE        ; Error code in "A" of desired
 ;                brk         ; YES - do BRK or change to RTS if desired
-        jmp $F000
+        jmp $F800
 GotByte1:        cmp #SOH        ; start of block?
         beq BegBlk      ; yes
         cmp #EOT        ;
@@ -194,12 +194,12 @@ GoodCrc:     ldx #$02        ;
         bne CopyBlk     ; no, copy all 128 bytes
         lda bflag       ; is it really block 1, not block 257, 513 etc.
         beq CopyBlk     ; no, copy all 128 bytes
-        ;lda Rbuff,x     ; get target address from 1st 2 bytes of blk 1
-        lda #$00   ; ********** STORE PROGRAM TO $1000 ************
+        lda Rbuff,x     ; get target address from 1st 2 bytes of blk 1
+        ;lda #$00   ; ********** STORE PROGRAM TO $1000 ************
         sta ptr     ; save lo address
         inx         ;
-        ;lda Rbuff,x     ; get hi address
-        lda #$10   ; ********* STORE PROGRAM TO $1000 ************
+        lda Rbuff,x     ; get hi address
+        ;lda #$10   ; ********* STORE PROGRAM TO $1000 ************
         sta ptr+1       ; save it
         inx         ; point to first byte of data
         dec bflag       ; set the flag so we won't get another address      
