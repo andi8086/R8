@@ -249,24 +249,6 @@ L40D7:
         lda     LINNUM+1
         cmp     #$58
         beq     L40FA
-
-
-.ifdef CBM1
-; CBM: hard RAM top limit is $8000
-        lda     LINNUM+1
-        cmp     #$80
-        beq     L40FA
-.endif
-.ifdef CBM2
-; optimized version of the CBM1 code
-        bmi     L40FA
-.endif
-.if .def(AIM65)
-; AIM65: hard RAM top limit is $A000
-        lda     LINNUM+1
-        cmp     #$A0
-        beq     L40FA
-.endif
 L40DD:
 .ifdef CONFIG_2
         lda     #$55 ; 01010101 / 10101010
@@ -301,91 +283,10 @@ L40FA:
         ldy     LINNUM+1
         sta     MEMSIZ
         sty     MEMSIZ+1
-.if !(.def(MICROTAN) || .def(AIM65) || .def(SYM1))
         sta     FRETOP
         sty     FRETOP+1
-.endif
 L4106:
-.ifndef CONFIG_CBM_ALL
-  .ifdef APPLE
-        lda     #$FF
-        jmp     L2829
-        .word	STROUT ; PATCH!
-        jsr     NXIN
-  .else
-        lda     #<QT_TERMINAL_WIDTH
-        ldy     #>QT_TERMINAL_WIDTH
-        jsr     STROUT
-        jsr     NXIN
-  .endif
-        stx     TXTPTR
-        sty     TXTPTR+1
-        jsr     CHRGET
-        tay
-        beq     L4136
-        jsr     LINGET
-        lda     LINNUM+1
-        bne     L4106
-        lda     LINNUM
-        cmp     #$10
-        bcc     L4106
-L2829:
-        sta     Z17
-L4129:
-  .ifdef AIM65
-        sbc     #$0A
-  .else
-        sbc     #$0E
-  .endif
-        bcs     L4129
-        eor     #$FF
-  .ifdef AIM65
-        sbc     #$08
-  .else
-        sbc     #$0C
-  .endif
-        clc
-        adc     Z17
-        sta     Z18
-.endif
 L4136:
-.ifdef CONFIG_RAM
-        lda     #<QT_WANT
-        ldy     #>QT_WANT
-        jsr     STROUT
-        jsr     NXIN
-        stx     TXTPTR
-        sty     TXTPTR+1
-        jsr     CHRGET
-        ldx     #<RAMSTART1
-        ldy     #>RAMSTART1
-        cmp     #'Y'
-        beq     L4183
-        cmp     #'A'
-        beq     L4157
-        cmp     #'N'
-        bne     L4136
-L4157:
-        ldx     #<IQERR
-        ldy     #>IQERR
-        stx     UNFNC_ATN
-        sty     UNFNC_ATN+1
-        ldx     #<ATN	; overwrite starting
-        ldy     #>ATN	; with ATN
-        cmp     #'A'
-        beq     L4183
-        ldx     #<IQERR
-        ldy     #>IQERR
-        stx     UNFNC_COS
-        sty     UNFNC_COS+1
-        stx     UNFNC_TAN
-        sty     UNFNC_TAN+1
-        stx     UNFNC_SIN
-        sty     UNFNC_SIN+1
-        ldx     #<SIN_COS_TAN_ATN	; overwrite
-        ldy     #>SIN_COS_TAN_ATN	; all of trig.s
-L4183:
-.else
         ldx     #<RAMSTART2
         ldy     #>RAMSTART2
 .endif
@@ -395,24 +296,12 @@ L4183:
         tya
         sta     (TXTTAB),y
         inc     TXTTAB
-.ifndef CBM2
-        bne     L4192
-        inc     TXTTAB+1
-L4192:
-.endif
-.if CONFIG_SCRTCH_ORDER = 1
-        jsr     SCRTCH
-.endif
         lda     TXTTAB
         ldy     TXTTAB+1
         jsr     REASON
-.ifdef CBM2
         lda     #<QT_BASIC
         ldy     #>QT_BASIC
         jsr     STROUT
-.else
-        jsr     CRDO
-.endif
         lda     MEMSIZ
         sec
         sbc     TXTTAB
@@ -486,7 +375,7 @@ QT_BYTES_FREE:
         .byte   " BYTES FREE"
   .ifdef CBM1
   .elseif .def(CBM2)
-        .byte   CR,0
+        .byte   CR,LF,0
   .elseif .def(APPLE)
         .byte   0
   .else
@@ -538,4 +427,3 @@ QT_BASIC:
         .byte   0
       .endif
   .endif
-.endif

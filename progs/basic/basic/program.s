@@ -556,7 +556,7 @@ CLEARC:
         sta     FRETOP
         sty     FRETOP+1
 .ifdef CONFIG_CBM_ALL
-        jsr     CLALL
+       ; jsr     CLALL  ; AJR NOT DEFINED IN KERNAL
 .endif
         lda     VARTAB
         ldy     VARTAB+1
