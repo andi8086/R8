@@ -478,7 +478,7 @@ QT_BYTES_FREE:
         .byte   " BYTES FREE"
   .ifdef CBM1
   .elseif .def(CBM2)
-        .byte   CR,0
+        .byte   CR,LF,0
   .elseif .def(APPLE)
         .byte   0
   .else

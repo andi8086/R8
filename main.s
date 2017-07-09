@@ -5,8 +5,10 @@
     .export ZPG_STRPOINTER
     .export serial_putc
     .export _serial_puts
+    .export serial_puts
     .export serial_getc
     .export serial_getc_echo
+    .export kernal_clall
     .import wozmon_start
 
     .import cbmbasic2_start
@@ -22,7 +24,7 @@
 
 __init:             SEI             ; disable interrupts
                     CLD
-                    LDX #$A8    ; strange errors with S starting at FF...
+                    LDX #$FF    ; strange errors with S starting at FF...
                     TXS             ; initialize stack pointer
                     JSR _init_6551
                     
@@ -57,7 +59,7 @@ _init_6551:
                     ; RTS low, no RX ints, DTR low
                     STA ACIA1_CMD    
                     RTS
-
+serial_puts:
 _serial_puts:
     ;----------------------------------------------
     ; send a 0-terminated ASCII string via 6551 ACIA
@@ -151,13 +153,25 @@ kernal_disk_index:
                     CLC ; simulate success
                     RTS
 
+kernal_clall:
+
+                    RTS
+
 __nmi:
     NOP
     RTI
 
-__irq:
-    NOP
-    RTI
+__irq:  ; IRQ or BRK happened
+                    PLA
+                    BIT $10     ; test B bit
+                    PHA
+                    BNE __irq_brk
+
+                    RTI
+__irq_brk:
+        ; A BRK was executed
+                    ;ASR         ; shift 
+                    RTI
 
 startmsg:
 .byte $0A,$0D,"REICHEL R8",$0A,$0D,"6502 CPU @ 2 MHz",$0A,$0D,"32K RAM",$0A,$0D,$00

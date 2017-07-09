@@ -52,6 +52,7 @@ ENTROPY = $8070 ; AJR - yet nothing there in IO space
 .import serial_getc  ; AJR
 .import serial_putc  ; AJR
 .import serial_getc_echo ; AJR
+.import kernal_clall ; AJR
 ; monitor functions
 ;OPEN	:= $FFC0
 ;CLOSE	:= $FFC3
@@ -68,7 +69,7 @@ VERIFY	:= $FFDB
 SYS		:= $FFDE
 ISCNTC	:= $FFE1
 GETIN	:= $FFE4
-CLALL	:= $FFE7
+CLALL	:= kernal_clall
 ; LE7F3	:= $E7F3; for CBM1
 MONCOUT	:= CHROUT
 ;MONRDKEY := GETIN
