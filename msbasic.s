@@ -45,7 +45,8 @@ WIDTH2			:= 30
 RAMSTART2		:= $0400
 
 ; magic memory locations
-ENTROPY = $E844
+;ENTROPY = $E844
+ENTROPY = $8070 ; AJR - yet nothing there in IO space
 
 
 .import serial_getc  ; AJR
