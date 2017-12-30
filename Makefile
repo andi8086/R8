@@ -1,11 +1,12 @@
 INCLUDE = /usr/bin/share/cc65/asminc
 
 OBJS = 	main.o \
-		math2.o \
-		math.o \
-		xmodem.o \
-		wozmon.o \
-        msbasic.o 
+	chargen.o \
+	math2.o \
+	math.o \
+	xmodem.o \
+	wozmon.o \
+	msbasic.o
 
 AS = ca65
 
