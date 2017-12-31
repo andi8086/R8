@@ -20,7 +20,7 @@ rom.bin: $(OBJS)
 	@echo
 	@echo Entry point of BASIC is $(BASIC_ENTRY)
 msbasic.o: msbasic.s
-	$(AS) -I $(INCLUDE) -D cbmbasic2 $< -o $@
+	$(AS) -I $(INCLUDE) -D cbmbasic2 $< -o $@ -l $@.lst
 
 %.o: %.s
 	$(AS) -I $(INCLUDE) $<
