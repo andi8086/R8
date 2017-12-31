@@ -23,7 +23,7 @@ msbasic.o: msbasic.s
 	$(AS) -I $(INCLUDE) -D cbmbasic2 $< -o $@ -l $@.lst
 
 %.o: %.s
-	$(AS) -I $(INCLUDE) $<
+	$(AS) -I $(INCLUDE) $< -l $@.lst
 
 clean:
 	rm *.o rom.bin
