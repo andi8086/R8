@@ -14,18 +14,15 @@
     .import cbmbasic2_start
 
     ZPG_STRPOINTER    = $20
-    
-    IO_BASE           = $8000
-    ACIA1_BASE        = IO_BASE + $40
-    ACIA1_DAT         = ACIA1_BASE + 0
-    ACIA1_STAT        = ACIA1_BASE + 1
-    ACIA1_CMD         = ACIA1_BASE + 2
-    ACIA1_CTL         = ACIA1_BASE + 3
+
+    .include "system.inc"
+
 
 __init:             SEI             ; disable interrupts
                     CLD
                     LDX #$FF    ; strange errors with S starting at FF...
                     TXS             ; initialize stack pointer
+                    JSR _init_SYSCTRL
                     JSR _init_6551
                     
                     LDA #< startmsg
@@ -59,6 +56,15 @@ _init_6551:
                     ; RTS low, no RX ints, DTR low
                     STA ACIA1_CMD    
                     RTS
+
+_init_SYSCTRL:
+    ;----------------------------------------------
+    ; Initialize system control ports
+    ;----------------------------------------------
+                    LDA #$7F
+                    STA SYSCTRL_DDRA
+                    RTS
+
 serial_puts:
 _serial_puts:
     ;----------------------------------------------
