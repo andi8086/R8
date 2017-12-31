@@ -9,12 +9,13 @@
     .export serial_getc
     .export serial_getc_echo
     .export kernal_clall
+    .export rga_clrscr
+
     .import wozmon_start
 
     .import cbmbasic2_start
 
-    ZPG_STRPOINTER    = $20
-
+    .include "zp.inc"
     .include "system.inc"
 
 
@@ -163,6 +164,55 @@ kernal_clall:
 
                     RTS
 
+    ;----------------------------------------------
+    ; KERNAL RGA Synchronize with video controller
+    ;
+    ; Wait until video is locked and then wait
+    ; until video is unlocked
+    ;----------------------------------------------
+rga_waitsync:
+                    BIT SYSCTRL_A
+                    BPL rga_waitsync
+rga_waitnolock:     BIT SYSCTRL_A
+                    BMI rga_waitnolock
+		    RTS
+
+    ;----------------------------------------------
+    ; KERNAL RGA clear screen
+    ;
+    ; Fill screen with BKCOLOR
+    ;----------------------------------------------
+rga_clrscr:
+                    LDX #3              ; start with video bank 3
+                    STX RGA_CURBANK
+                    LDA RGA_BKCOLOR
+rga_clrscr_nextpage:
+                    LDX RGA_CURBANK
+                    STX SYSCTRL_A       ; set video bank
+
+                    LDX #$9F            ; stop if high address is below A0
+
+                    LDY #$00
+                    STY RGA_VIDPOINTER
+                    LDY #$BF
+                    STY RGA_VIDPOINTER+1
+                    LDY #$FF            ; Use (ZP),Y adressing mode
+
+rga_clrscr_sync:
+                    JSR rga_waitsync    ; wait for video unlocked
+
+rga_clrscr_loop:
+                    STA (RGA_VIDPOINTER), Y ; store pixel
+                    DEY
+                    CPY #$FF            ; 256 pixels written?
+                    BNE rga_clrscr_loop ; no, continue
+                    DEC RGA_VIDPOINTER+1; yes, decrease high address
+                    CPX RGA_VIDPOINTER+1; below $A000?
+                    BNE rga_clrscr_sync ; no, continue
+                    DEC RGA_CURBANK     ; yes, decrease bank
+                    BPL rga_clrscr_nextpage ; and continue if bank >= 0
+                    RTS
+    
 __nmi:
     NOP
     RTI
