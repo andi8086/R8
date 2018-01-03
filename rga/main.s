@@ -85,8 +85,8 @@ intSPM_READY:   jmp defaultInt
 
 ; Frame structure constants
 .equ _LINE_STOP_VSYNC_L1, 6
-.equ _LINE_BLANK1_END, 32 
-.equ _LINE_SCREEN_END, 254
+.equ _LINE_BLANK1_END, 52 
+.equ _LINE_SCREEN_END, 208 ;254
 .equ _LINE_SCREEN_END2, 50
 .equ _LINE_FRAME_END, 311
 
@@ -150,10 +150,11 @@ vs_set_dproc:
 dproc:
     inc r24
     cpi r24, _LINE_SCREEN_END
-    breq vs_set_dproc2
+    ;breq vs_set_dproc2
+    breq vs_set_b2proc
     com r22
-    cpi r22, 0
-    breq emptyline
+    ;cpi r22, 0
+    ;breq emptyline
     ldi r18, 0
     ldi r19, 1
     ldi r17, 78 
