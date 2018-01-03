@@ -368,7 +368,7 @@ stay_in_bank:
                       STA RGA_VIDPOINTER
                       LDA RGA_VIDPOINTER+1
                       ADC #0
-                      CMP #$BF  ;if A >= $BF, C flag is set
+                      CMP #$C0  ;if A >= $C0, C flag is set
                       BCC stay_in_bank2
                         ; carry is set here. This works the other way arround than
                         ; the compare above. Here the limit is the operand, above
