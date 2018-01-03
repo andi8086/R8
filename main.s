@@ -25,7 +25,8 @@ __init:             SEI             ; disable interrupts
                     TXS             ; initialize stack pointer
                     JSR _init_SYSCTRL
                     JSR _init_6551
-                    
+                    JSR rga_reset
+ 
                     LDA #< startmsg
                     STA ZPG_STRPOINTER
                     LDA #> startmsg
@@ -388,6 +389,62 @@ stay_in_bank2:
                       BMI loopy
 
                     RTS
+    
+    ;----------------------------------------------
+    ; KERNAL RGA reset
+    ; Set Background color to 0, Foreground color
+    ; to FF, Current Column and Row to 0
+    ;
+    ; Input: None
+    ;----------------------------------------------
+rga_reset:
+                    LDA #0
+                    STA RGA_BGCOLOR
+                    STA RGA_VIDEOROW
+                    STA RGA_VIDEOCOL
+                    LDA #$FF
+                    STA RGA_FGCOLOR
+                    RTS
+
+    ;----------------------------------------------
+    ; KERNAL RGA put character 
+    ; Output a character with current attributes 
+    ; at current row and current column.
+    ; Increase column and goto next line if needed
+    ; also scroll screen up if full.
+    ;
+    ; Input: None
+    ;----------------------------------------------
+rga_putc:
+                    PHA
+                    JSR rga_calc_ramoffset
+                    PLA
+                    JSR rga_renderchar
+                    INC RGA_VIDEOCOL
+                    LDA RGA_VIDEOCOL
+                    CMP #34
+                    BPL row_okay
+                    LDA #0
+                    STA RGA_VIDEOCOL
+                    INC RGA_VIDEOROW
+                    LDA RGA_VIDEOROW
+                    CMP #18
+                    BPL row_okay
+                    DEC RGA_VIDEOROW
+                    JSR rga_scrollup
+row_okay:
+                    RTS
+
+    ;----------------------------------------------
+    ; KERNAL RGA scroll up screen 
+    ;
+    ; Input: None
+    ;----------------------------------------------
+rga_scrollup:
+
+                    RTS
+
+
 
 kernal_test_chars:
                     LDA #255
@@ -410,6 +467,7 @@ col_loop:
                     DEC RGA_VIDEOROW
                     BPL row_loop
                     RTS
+
 
 __nmi:
     NOP
