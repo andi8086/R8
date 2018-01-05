@@ -134,11 +134,11 @@ vs_set_dproc:
     ldi ZL, pm_lo8(dproc)
     ldi ZH, pm_hi8(dproc)
 
-    ldi r18, _VDATA_BLANK_ | _VDATA_LOCK_ | _VDATA_RESET_ 
+    ldi r18, _VDATA_BLANK_ | _VDATA_RESET_
     out _VDATA_PORT_, r18                  ; reset RAMDAC Address counter
     nop
     nop 
-    ldi r18, _VDATA_BLANK_ | _VDATA_LOCK_
+    ldi r18, _VDATA_BLANK_
     out _VDATA_PORT_, r18
     ldi r22, 0
     ret
@@ -167,8 +167,8 @@ dproc_nextpixel:
     brne dproc_nextpixel                   ; if we are on last pixel, do not loop back
     nop
 
-    ldi r20, _VDATA_BLANK_
-    out _VDATA_PORT_, r20                  ; set BLANK
+    ldi r20, _VDATA_BLANK_ | _VDATA_LOCK_
+    out _VDATA_PORT_, r20                  ; set BLANK and lock CPU access
     ret
 vs_set_b2proc:
     clr r24                                ; clear counter for blank
@@ -176,7 +176,7 @@ vs_set_b2proc:
     ldi ZH, pm_hi8(b2proc)
 
     ldi r20, _VDATA_BLANK_ | _VDATA_RESET_ ; set BLANK and Address RESET
-    out _VDATA_PORT_, r20                  ; allow CPU access
+    out _VDATA_PORT_, r20                  ; allow CPU access in blanking period
     ret
 
 ; *********************************** VIDEO HANDLER *************************************
