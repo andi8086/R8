@@ -6,11 +6,11 @@
 ; *  Target Device: Atmega 1248(P)                                                      *
 ; *                                                                                     *
 ; *  Used I/O Pins:                                                                     *
-; *       D5 - HSYNC to AD725 Video Encoder                                             *
-; *       B0 - CLOCK to RAMDAC Address Counter                                          *
-; *       A0 - Reset RAMDAC Address Counter                                             *
-; *       C7 - Video Lock Signal (VLOCK)                                                *
-; *       C6 - Video Blank (BLANK)                                                      *
+; *       B1 - HSYNC to AD725 Video Encoder                                             *
+; *       D0 - CLOCK to RAMDAC Address Counter                                          *
+; *       C5 - Reset RAMDAC Address Counter                                             *
+; *       C1 - Video Lock Signal (VLOCK)                                                *
+; *       C0 - Video Blank (BLANK)                                                      *
 ; *                                                                                     *
 ; *  Description:                                                                       *
 ; *       Generates a PAL Timing (Fake Progressive 2 x 312 Lines)                       *
@@ -31,7 +31,7 @@
 ; *                                                                                     *
 ; *       Signals were changed:                                                         *
 ; *             old          new                                                        *
-; *             D5 - HSYNC - B1 (OC1A)                                                  *
+; *             D5 - HSYNC   - B1 (OC1A)                                                *
 ; *             B0 - PXCLOCK - D0                                                       *
 ; *             A0 - RESRAMD - C5                                                       *
 ; *             C7 - VLOCK   - C1                                                       *
