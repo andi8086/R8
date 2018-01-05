@@ -454,8 +454,13 @@ row_loop:
                     LDX #34
                     STX RGA_VIDEOCOL
 col_loop:
+                    STA $3E
                     PHA
                     JSR rga_calc_ramoffset
+                    PLA
+                    PHA
+                    EOR $FF
+                    STA $3F
                     PLA
                     PHA
                     JSR rga_renderchar
