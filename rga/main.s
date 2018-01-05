@@ -72,44 +72,43 @@ intTWI:         jmp defaultInt
 intSPM_READY:   jmp defaultInt
 
 ; Video timing constants
-.equ _CPU_CYCLES_PER_MUSEC, 22 
+.equ _CPU_CYCLES_PER_MUSEC,   22
 
-.equ _PAL_TIME_SCANLINE, 64     ; µs
-; .equ _PAL_TIME_HSYNC, 4.7       
-; .equ _PAL_TIME_VSYNC, 58.85
+.equ _PAL_TIME_SCANLINE,      64  ; µs
+; .equ _PAL_TIME_HSYNC,        4.7
+; .equ _PAL_TIME_VSYNC,       58.85
 
 .equ _PAL_CYCLES_SCAN_LINE, 1407
 .equ _PAL_CYCLES_VERT_SYNC, 1200  ; (_PAL_TIME_VSYNC * _CPU_CYCLES_PER_MUSEC - 1)
-.equ _PAL_CYCLES_HORIZ_SYNC, 103    ; (_PAL_TIME_HSYNC * _CPU_CYCLES_PER_MUSEC - 1) ; 4.72 µs
+.equ _PAL_CYCLES_HORIZ_SYNC, 103  ; (_PAL_TIME_HSYNC * _CPU_CYCLES_PER_MUSEC - 1) ; 4.72 µs
 
 
 ; Frame structure constants
-.equ _LINE_STOP_VSYNC_L1, 6
-.equ _LINE_BLANK1_END, 52 
-.equ _LINE_SCREEN_END, 208 ;254
-.equ _LINE_SCREEN_END2, 50
-.equ _LINE_FRAME_END, 311
+.equ _LINE_STOP_VSYNC_L1,      6
+.equ _LINE_BLANK1_END,        52
+.equ _LINE_SCREEN_END,       208
+.equ _LINE_SCREEN_END2,       50
+.equ _LINE_FRAME_END,        311
 
 ; Control Signals
-.equ _VDATA_DDR_, DDRC
-.equ _VDATA_PORT_, PORTC
-.equ _VDATA_RESET_, 32
-.equ _VDATA_LOCK_, 2
-.equ _VDATA_BLANK_, 1
+.equ _VDATA_DDR_,           DDRC
+.equ _VDATA_PORT_,         PORTC
+.equ _VDATA_RESET_,           32
+.equ _VDATA_LOCK_,             2
+.equ _VDATA_BLANK_,            1
 
 defaultInt:
     reti
 
 vidIntHandler:
-    ; r30:r31 points to active scanline handler
-    icall 
+    icall                                  ; r30:r31 points to active scanline handler
     reti
 
 ; *********************************** VIDEO HANDLER *************************************
 ; VSYNC HALF LINES, LONG SYNC, 0-7
 ; ***************************************************************************************
 vproc_l1:
-    inc r24     ; this function starts with r24 = 0..7
+    inc r24                                ; this function starts with r24 = 0..7
     cpi r24, _LINE_STOP_VSYNC_L1
     breq vs_set_vproc_b
     ret
@@ -118,7 +117,7 @@ vs_set_vproc_b:
     sts OCR1AH, r16
     ldi r16, lo8(_PAL_CYCLES_HORIZ_SYNC)
     sts OCR1AL, r16
-    ; switch interrupt handler
+                                           ; switch interrupt handler
     ldi ZL, pm_lo8(bproc)
     ldi ZH, pm_hi8(bproc)
     ret
@@ -136,7 +135,7 @@ vs_set_dproc:
     ldi ZH, pm_hi8(dproc)
 
     ldi r18, _VDATA_BLANK_ | _VDATA_LOCK_ | _VDATA_RESET_ 
-    out _VDATA_PORT_, r18      ; reset RAMDAC Address counter
+    out _VDATA_PORT_, r18                  ; reset RAMDAC Address counter
     nop
     nop 
     ldi r18, _VDATA_BLANK_ | _VDATA_LOCK_
@@ -150,80 +149,36 @@ vs_set_dproc:
 dproc:
     inc r24
     cpi r24, _LINE_SCREEN_END
-    ;breq vs_set_dproc2
     breq vs_set_b2proc
-    com r22
-    ;cpi r22, 0
-    ;breq emptyline
     ldi r18, 0
     ldi r19, 1
     ldi r17, 78 
 dproc_delayfirstpixel:
     dec r17
     brne dproc_delayfirstpixel
-    ldi r20, _VDATA_LOCK_      ; VLOCK, not BLANK
-    out _VDATA_PORT_, r20      ; activate VLOCK, deactivate BLANK
-
-    ldi r17, 210       ; there are 210 pixels in each line, count from 210 to 1
-dproc_nextpixel:    
-    out PORTD, r18      ; counter clock pin down
+    ldi r20, _VDATA_LOCK_                  ; VLOCK, not BLANK
+    ldi r17, 210                           ; there are 210 pixels in each line, 
+                                           ; count from 210 to 1
+    out _VDATA_PORT_, r20                  ; activate VLOCK, deactivate BLANK
+dproc_nextpixel:
+    out PORTD, r18                         ; counter clock pin down
     dec r17
-    out PORTD, r19      ; counter clock pin up
-    brne dproc_nextpixel       ; if we are on last pixel, do not loop back
-    nop
-    nop
-
-    ldi r20, _VDATA_LOCK_ | _VDATA_BLANK_
-    out _VDATA_PORT_, r20       ; VLOCK AND BLANK
-emptyline:    
-    ret
-vs_set_dproc2:
-    clr r24             ; clear counter for blank
-    ldi ZL, pm_lo8(dproc2)
-    ldi ZH, pm_hi8(dproc2)
-    ldi r22, 0
-    ret
-
-; *********************************** VIDEO HANDLER *************************************
-; VISIBLE LINES 24 -- 179 (156 lines in resolution) [19 -- 174]
-; ***************************************************************************************
-dproc2:
-    inc r24
-    cpi r24, _LINE_SCREEN_END2
-    breq vs_set_b2proc
-    com r22
-    cpi r22, 0
-    breq emptyline2
-    ldi r18, 0
-    ldi r19, 1
-    ldi r17, 78 
-dproc2_delayfirstpixel:
-    dec r17
-    brne dproc2_delayfirstpixel
-    ldi r20, _VDATA_LOCK_      ; VLOCK, not BLANK
-    out _VDATA_PORT_, r20      ; activate VLOCK, deactivate BLANK
-
-    ldi r17, 210       ; there are 210 pixels in each line, count from 210 to 1
-dproc2_nextpixel:    
-    out PORTD, r18      ; counter clock pin down
-    dec r17
-    out PORTD, r19      ; counter clock pin up
-    brne dproc2_nextpixel       ; if we are on last pixel, do not loop back
-    nop
+    out PORTD, r19                         ; counter clock pin up
+    brne dproc_nextpixel                   ; if we are on last pixel, do not loop back
     nop
 
-    ldi r20, _VDATA_LOCK_ | _VDATA_BLANK_
-    out _VDATA_PORT_, r20       ; VLOCK AND BLANK
-emptyline2:    
+    ldi r20, _VDATA_BLANK_
+    out _VDATA_PORT_, r20                  ; set BLANK
     ret
 vs_set_b2proc:
-    clr r24             ; clear counter for blank
+    clr r24                                ; clear counter for blank
     ldi ZL, pm_lo8(b2proc)
     ldi ZH, pm_hi8(b2proc)
-    
-    ldi r20, _VDATA_BLANK_ | _VDATA_RESET_    ; not VLOCK, BLANK
-    out _VDATA_PORT_, r20      ; deactivate VLOCK, activate BLANK
+
+    ldi r20, _VDATA_BLANK_ | _VDATA_RESET_ ; set BLANK and Address RESET
+    out _VDATA_PORT_, r20                  ; allow CPU access
     ret
+
 ; *********************************** VIDEO HANDLER *************************************
 ;  HSYNC BLANK LINES 175 -- 309 [0 -- 134]
 ; ***************************************************************************************
@@ -239,68 +194,64 @@ vs_set_vproc_s2:
     sts OCR1AL, r16
     clr r24
     ldi ZL, pm_lo8(vproc_l1)
-    ldi ZH, pm_hi8(vproc_l1)    
+    ldi ZH, pm_hi8(vproc_l1)
     ret
 
+; *********************************** SETUP CODE ** *************************************
+;  MAIN
+; ***************************************************************************************
 main:
-    ; setup stack pointer
-    ldi r16, lo8(RAMEND)
+    ldi r16, lo8(RAMEND)                 ; setup stack pointer
     out SPL, r16
     ldi r16, hi8(RAMEND)
     out SPH, r16
 
-    ; first active handler is for vertical sync 
-    ldi ZL, pm_lo8(vproc_l1)
+    ldi ZL, pm_lo8(vproc_l1)             ; first active handler is for vertical sync 
     ldi ZH, pm_hi8(vproc_l1)
 
-    ; r24 always saves current scanline
-    clr r24
-    clr r25 ; scratch register for scanline calculation
+    clr r24                              ; r24 always saves current scanline
+    clr r25                              ; scratch register for scanline calculation
 
-    ; initialize video sync pin
-    ldi r16, 0x01
-    out DDRD, r16   ; D.0 => AD725.HSYNC
+    ldi r16, 0x01                        ; Initialize control pins
+    out DDRD, r16                        ; D.0 => AD725.HSYNC
     ldi r16, 0x3F
-    out _VDATA_DDR_, r16   ; C.1, C.0 => VLOCK, BLANK
+    out _VDATA_DDR_, r16                 ; C.1, C.0 => VLOCK, BLANK
     ldi r16, 0x02
-    out DDRB, r16   ; B.1 => AD725.HSYNC
+    out DDRB, r16                        ; B.1 => AD725.HSYNC
 
     ldi r16, 0
     out PORTD, r16
     out PORTB, r16
 
-    ldi r16, _VDATA_BLANK_    ; deactivate VLOCK, activate BLANK
+    ldi r16, _VDATA_BLANK_               ; activate BLANK, allow CPU access
     out _VDATA_PORT_, r16 
 
-    ; initialize video timings
+                                         ; initialize video timings
     ldi r16, COM1A1 | COM1A0 | WGM11     ; for Fast PWM, clear OC1A at BOTTOM
-                                                        ; set OC1A at Compare Match
+                                         ; set OC1A at Compare Match
     sts TCCR1A, r16
-    
+
     ldi r16, WGM13 | WGM12 | CS10        ; Waveform Generation Mode 14 (Top = ICRn, Update 
-                                                        ; OCR1A at bottom, Fast PWM
-                                                        ; no prescaling, use clock as IO clock
+                                         ; OCR1A at bottom, Fast PWM
+                                         ; no prescaling, use clock as IO clock
     sts TCCR1B, r16
 
     ldi r16, hi8(_PAL_CYCLES_SCAN_LINE)
     sts ICR1H, r16
     ldi r16, lo8(_PAL_CYCLES_SCAN_LINE)
     sts ICR1L, r16
-    
+
     ldi r16, hi8(_PAL_CYCLES_VERT_SYNC)
     sts OCR1AH, r16
     ldi r16, lo8(_PAL_CYCLES_VERT_SYNC)
     sts OCR1AL, r16
 
-    ldi r16, TOIE1   ; timer1 overflow interrupt enable
+    ldi r16, TOIE1                       ; timer1 overflow interrupt enable
     sts TIMSK1, r16
 
-    ldi r20, _VDATA_LOCK_ | _VDATA_BLANK_
-    out _VDATA_PORT_, r20       ; VLOCK AND BLANK
-    ; enable interrupts
-    sei
+    sei                                  ; enable interrupts and start video generation
 
 l1:
     nop
-    nop    
+    nop
     rjmp l1
