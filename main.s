@@ -93,6 +93,7 @@ _tx_full:           BIT ACIA1_STAT
                     PLA
                     STA ACIA1_DAT
                     ; now also output to RGA :)
+                    JSR rga_waitsync
                     JSR rga_putc
                     RTS
 
