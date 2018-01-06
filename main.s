@@ -80,7 +80,7 @@ _serial_puts_next:  LDA (ZPG_STRPOINTER),Y
                     JSR serial_putc
                     INY
                     BNE _serial_puts_next
-_serial_puts_end:   RTS                     
+_serial_puts_end:   RTS
 
 serial_putc:
     ;----------------------------------------------
@@ -92,6 +92,8 @@ _tx_full:           BIT ACIA1_STAT
                     BEQ _tx_full
                     PLA
                     STA ACIA1_DAT
+                    ; now also output to RGA :)
+                    JSR rga_putc
                     RTS
 
 serial_getc:        LDA #$08
@@ -411,6 +413,7 @@ rga_reset:
                     STA RGA_VIDEOCOL
                     LDA #$FF
                     STA RGA_FGCOLOR
+                    JSR rga_clrscr
                     RTS
 
     ;----------------------------------------------
@@ -423,6 +426,17 @@ rga_reset:
     ; Input: None
     ;----------------------------------------------
 rga_putc:
+                    STA ZP_TMP
+                    PHA
+                    TXA
+                    PHA
+                    TYA
+                    PHA
+                    LDA ZP_TMP
+                    CMP #$0A ; line feed
+                    BEQ rga_lf
+                    CMP #$0D ; carriage return
+                    BEQ rga_cr
                     PHA
                     JSR rga_calc_ramoffset
                     PLA
@@ -430,17 +444,27 @@ rga_putc:
                     INC RGA_VIDEOCOL
                     LDA RGA_VIDEOCOL
                     CMP #34
-                    BPL row_okay
+                    BNE row_okay
                     LDA #0
                     STA RGA_VIDEOCOL
+rga_lf:
                     INC RGA_VIDEOROW
                     LDA RGA_VIDEOROW
                     CMP #18
-                    BPL row_okay
+                    BNE row_okay
                     DEC RGA_VIDEOROW
                     JSR rga_scrollup
 row_okay:
+                    PLA
+                    TAY
+                    PLA
+                    TAX
+                    PLA
                     RTS
+rga_cr:
+                    LDA #0
+                    STA RGA_VIDEOCOL
+                    BEQ row_okay
 
     ;----------------------------------------------
     ; KERNAL RGA scroll up screen 
