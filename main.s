@@ -472,31 +472,70 @@ scroll_line_up:
                     STA (ZP_TMP),Y              ; 6 cycles
                     DEY                         ; 2 cycles
                     BNE scroll_line_up          ; 3 cycles
-                                                ;---- 36 cycles * 210 = 7560
+                                                ;---- 36 cycles * 256 = 9216 
                     INC RGA_VIDPOINTER+1
                     LDA RGA_VIDPOINTER+1
-                    CMP #$C0
-                    BMI scrollup_skip_bank1adjust
-                    SBC #$20
+                    CMP #$BF
+                    BNE scrollup_skip_bank1adjust
+                                                ; Here, SRC is at $BF90, because
+                                                ; we started at $A690, so last position
+                                                ; was $BF8F and $70 pixels are missing
+                                                ; dest is at $B8FF
+                    JSR rga_waitsync
+                    INC ZP_TMP+1                ; increase dest page, is B9 now
+                    LDY #0
+complete_source_page:
+                    LDA RGA_CURBANK
+                    STA $8001
+                    LDA (RGA_VIDPOINTER),Y      ; BF90 + Y, with Y = 0..6F
+                    PHA
+                    LDA ZP_BANKTMP
+                    STA $8001
+                    PLA
+                    STA (ZP_TMP),Y              ; B900 + Y, with Y = 0..6F
+                    INY
+                    CPY #$70
+                    BNE complete_source_page
+                                                ; here we completed the source page
+                                                ; and src is at $BFFF, and dest is at $B96F
+
+                    STY ZP_TMP                  ; adjust DEST LOW to $70
+                    LDA #$A0
                     STA RGA_VIDPOINTER+1
                     INC RGA_CURBANK
                     LDA RGA_CURBANK
                     CMP #4
-                    BPL end_scrollup
-                    SEC
+                    BEQ end_scrollup
+                    LDY #0
+                    STY RGA_VIDPOINTER          ; set SRC LOW to $00
+complete_dest_page:                             ; here we increased the source bank
+                    LDA RGA_CURBANK             ; and copy from $A000 till dest reaches
+                    STA $8001                   ; $B9FF (src is then at A08F)
+                    LDA (RGA_VIDPOINTER),Y      ; A000 + Y, with Y = 0..8F
+                    PHA
+                    LDA ZP_BANKTMP
+                    STA $8001
+                    PLA
+                    STA (ZP_TMP),Y              ; B970 + Y, with Y = 0..8F
+                    INY
+                    CPY #$90
+                    BNE complete_dest_page
+                    STY RGA_VIDPOINTER          ; reset SRC LOW to $90
+                    LDY #0
+                    STY ZP_TMP                  ; reset DEST_LOW to $00
 scrollup_skip_bank1adjust:
                     INC ZP_TMP+1
                     LDA ZP_TMP+1
                     CMP #$C0
-                    BMI scrollup_skip_bank2adjust
-                    SBC #$20
+                    BNE scrollup_skip_bank2adjust
+                    LDA #$A0
                     STA ZP_TMP+1
                     INC ZP_BANKTMP
 scrollup_skip_bank2adjust:
                     TXA
                     LSR
                     BCS scroll_line_up_nosync   ; skip every other time, i.e.
-                    JSR rga_waitsync            ; call every 16000 cycles approx
+                    JSR rga_waitsync            ; call every 19000 cycles approx
 scroll_line_up_nosync:
                     DEX
                     SEC
