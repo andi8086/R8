@@ -541,11 +541,38 @@ scroll_line_up_nosync:
                     SEC
                     BCS scroll_line_up
 end_scrollup:
-                    LDA #0
+                    LDA #3
                     STA RGA_CURBANK
+                    LDA #$B6
+                    STA RGA_VIDPOINTER+1
+                    LDA #$20
+                    STA RGA_VIDPOINTER
+                    LDX #8
+                    JSR rga_waitsync
+scroll_fillbk_line:
+                    LDA RGA_BGCOLOR             ; fill last line with background
+                    LDY #210
+scroll_fillbk_scan:
+                    STA (RGA_VIDPOINTER),Y      ; 6 cycles
+                    DEY                         ; 2 cycles
+                    BPL scroll_fillbk_scan      ; 3 cycles
+                    CLC                         ; --------- 11 * 210 = 2310
+                    LDA RGA_VIDPOINTER
+                    ADC #210
+                    STA RGA_VIDPOINTER
+                    LDA RGA_VIDPOINTER+1
+                    ADC #0
+                    STA RGA_VIDPOINTER+1
+                    DEX
+                    TXA
+                    LSR
+                    BCS skip_fillbk_sync
+                    LSR
+                    BCS skip_fillbk_sync
+                    JSR rga_waitsync
+skip_fillbk_sync:
+                    BNE scroll_fillbk_line
                     RTS
-
-
 
 kernal_test_chars:
                     LDA #255
