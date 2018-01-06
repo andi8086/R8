@@ -225,23 +225,31 @@ rga_clrscr_nextpage:
                     STX SYSCTRL_A       ; set video bank
 
                     LDX #$9F            ; stop if high address is below A0
-
-                    LDY #$00
-                    STY RGA_VIDPOINTER
+                    LDY #1
+                    STY ZP_TMP
                     LDY #$BF
                     STY RGA_VIDPOINTER+1
-                    LDY #$FF            ; Use (ZP),Y adressing mode
-
+                    LDY #$00            ; Use (ZP),Y adressing mode
+                    STY RGA_VIDPOINTER
 rga_clrscr_sync:
+                    DEC ZP_TMP
+                    BNE rga_clrscr_loop ; 6 times, we skip the sync wait, i.e.
+                                        ; we call it all 16896 clocks approx
+                    PHA
+                    LDA #6
+                    STA ZP_TMP
+                    PLA
                     JSR rga_waitsync    ; wait for video unlocked
-
 rga_clrscr_loop:
-                    STA (RGA_VIDPOINTER), Y ; store pixel
-                    DEY
-                    CPY #$FF            ; 256 pixels written?
-                    BNE rga_clrscr_loop ; no, continue
+                    STA (RGA_VIDPOINTER), Y ; store pixel               ; 6 clocks
+                    DEY                                                 ; 2 clocks
+                                        ; 256 pixels written?
+                    BNE rga_clrscr_loop ; no, continue                  ; 3 clocks
+                                                                    ; --------------
+                                                                    ;  x 256 = 2816 clocks
                     DEC RGA_VIDPOINTER+1; yes, decrease high address
                     CPX RGA_VIDPOINTER+1; below $A000?
+
                     BNE rga_clrscr_sync ; no, continue
                     DEC RGA_CURBANK     ; yes, decrease bank
                     BPL rga_clrscr_nextpage ; and continue if bank >= 0
@@ -329,7 +337,6 @@ rga_renderchar:
                     LDA #$80
                     STA ZP_TMP  ; init bitmask
                     LDA #0      ; Initialize Y-Counter
-                    JSR rga_waitsync
 loopy:
                       PHA       ; save Y-Counter
                       LDY #0    ; init index into bitmask, which is the pixel-column
@@ -441,7 +448,62 @@ row_okay:
     ; Input: None
     ;----------------------------------------------
 rga_scrollup:
-
+                    LDA #$A6                    ; Initialize pointer to row 1
+                    STA RGA_VIDPOINTER+1
+                    LDA #$90
+                    STA RGA_VIDPOINTER
+                    LDA #0
+                    STA ZP_TMP
+                    STA RGA_CURBANK
+                    STA ZP_BANKTMP
+                    LDA #$A0
+                    STA ZP_TMP+1                ; RGA_VIDPOINTER is SRC, ZP_TMP is DST
+                    LDY #0
+                    LDX #8
+                    JSR rga_waitsync
+scroll_line_up:
+                    LDA RGA_CURBANK             ; 3 cycles
+                    STA $8001                   ; 3 cycles
+                    LDA (RGA_VIDPOINTER),Y      ; 6 cycles
+                    PHA                         ; 3 cycles
+                    LDA ZP_BANKTMP              ; 3 cycles
+                    STA $8001                   ; 3 cycles
+                    PLA                         ; 4 cycles
+                    STA (ZP_TMP),Y              ; 6 cycles
+                    DEY                         ; 2 cycles
+                    BNE scroll_line_up          ; 3 cycles
+                                                ;---- 36 cycles * 210 = 7560
+                    INC RGA_VIDPOINTER+1
+                    LDA RGA_VIDPOINTER+1
+                    CMP #$C0
+                    BMI scrollup_skip_bank1adjust
+                    SBC #$20
+                    STA RGA_VIDPOINTER+1
+                    INC RGA_CURBANK
+                    LDA RGA_CURBANK
+                    CMP #4
+                    BPL end_scrollup
+                    SEC
+scrollup_skip_bank1adjust:
+                    INC ZP_TMP+1
+                    LDA ZP_TMP+1
+                    CMP #$C0
+                    BMI scrollup_skip_bank2adjust
+                    SBC #$20
+                    STA ZP_TMP+1
+                    INC ZP_BANKTMP
+scrollup_skip_bank2adjust:
+                    TXA
+                    LSR
+                    BCS scroll_line_up_nosync   ; skip every other time, i.e.
+                    JSR rga_waitsync            ; call every 16000 cycles approx
+scroll_line_up_nosync:
+                    DEX
+                    SEC
+                    BCS scroll_line_up
+end_scrollup:
+                    LDA #0
+                    STA RGA_CURBANK
                     RTS
 
 
@@ -450,6 +512,7 @@ kernal_test_chars:
                     LDA #255
                     LDX #18
                     STX RGA_VIDEOROW
+                    JSR rga_waitsync
 row_loop:
                     LDX #34
                     STX RGA_VIDEOCOL
@@ -467,8 +530,17 @@ col_loop:
                     PLA
                     SEC
                     SBC #1
-                    DEC RGA_VIDEOCOL
-                    BPL col_loop
+                    PHA
+                    LDA RGA_VIDEOCOL
+                    LSR
+                    BCS tc_nosyncwait; if one of last two bits is set, skip sync wait
+                    LSR
+                    BCS tc_nosyncwait; i.e. all 4 characters
+		    JSR rga_waitsync
+tc_nosyncwait:
+		    PLA
+	            DEC RGA_VIDEOCOL
+		    BPL col_loop
                     DEC RGA_VIDEOROW
                     BPL row_loop
                     RTS

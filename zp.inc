@@ -1,7 +1,8 @@
-    ZP_TMP2           = $19
-    ZP_TMP            = $1A   
- 
-    KM_ERG	      = $1B
+    ZP_BANKTMP         = $18
+    ZP_TMP             = $19
+    ZP_TMP2            = $1A
+
+    KM_ERG            = $1B
     KM_ERGHI          = $1C
     KM_X              = $1D
     KM_XHI            = $1E
