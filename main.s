@@ -487,17 +487,21 @@ rga_scrollup:
                     LDX #8
                     JSR rga_waitsync
 scroll_line_up:
+                    TXA
+                    PHA                         ; save X
+                    LDX ZP_BANKTMP 
+scroll_line_up_loop1:
                     LDA RGA_CURBANK             ; 3 cycles
                     STA $8001                   ; 3 cycles
                     LDA (RGA_VIDPOINTER),Y      ; 6 cycles
-                    PHA                         ; 3 cycles
-                    LDA ZP_BANKTMP              ; 3 cycles
-                    STA $8001                   ; 3 cycles
-                    PLA                         ; 4 cycles
+                    STX $8001                   ; 3 cycles
                     STA (ZP_TMP),Y              ; 6 cycles
                     DEY                         ; 2 cycles
-                    BNE scroll_line_up          ; 3 cycles
-                                                ;---- 36 cycles * 256 = 9216 
+                    BNE scroll_line_up_loop1    ; 3 cycles
+                                                ;---- 26 cycles * 256 = 6656 
+                    
+                    PLA
+                    TAX                         ; restore X
                     INC RGA_VIDPOINTER+1
                     LDA RGA_VIDPOINTER+1
                     CMP #$BF
@@ -509,14 +513,8 @@ scroll_line_up:
                     JSR rga_waitsync
                     INC ZP_TMP+1                ; increase dest page, is B9 now
                     LDY #0
-complete_source_page:
-                    LDA RGA_CURBANK
-                    STA $8001
+complete_source_page:                           ; SRC and DST are in the same bank :)
                     LDA (RGA_VIDPOINTER),Y      ; BF90 + Y, with Y = 0..6F
-                    PHA
-                    LDA ZP_BANKTMP
-                    STA $8001
-                    PLA
                     STA (ZP_TMP),Y              ; B900 + Y, with Y = 0..6F
                     INY
                     CPY #$70
@@ -533,18 +531,20 @@ complete_source_page:
                     BEQ end_scrollup
                     LDY #0
                     STY RGA_VIDPOINTER          ; set SRC LOW to $00
+                    TXA
+                    PHA                         ; save X
+                    LDX ZP_BANKTMP
 complete_dest_page:                             ; here we increased the source bank
                     LDA RGA_CURBANK             ; and copy from $A000 till dest reaches
                     STA $8001                   ; $B9FF (src is then at A08F)
                     LDA (RGA_VIDPOINTER),Y      ; A000 + Y, with Y = 0..8F
-                    PHA
-                    LDA ZP_BANKTMP
-                    STA $8001
-                    PLA
+                    STX $8001
                     STA (ZP_TMP),Y              ; B970 + Y, with Y = 0..8F
                     INY
                     CPY #$90
                     BNE complete_dest_page
+                    PLA
+                    TAX                         ; restore X
                     STY RGA_VIDPOINTER          ; reset SRC LOW to $90
                     LDY #0
                     STY ZP_TMP                  ; reset DEST_LOW to $00
