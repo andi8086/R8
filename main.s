@@ -451,7 +451,7 @@ rga_putc:
 rga_lf:
                     INC RGA_VIDEOROW
                     LDA RGA_VIDEOROW
-                    CMP #18
+                    CMP #19
                     BNE row_okay
                     DEC RGA_VIDEOROW
                     JSR rga_scrollup
@@ -572,22 +572,28 @@ end_scrollup:
                     STA RGA_VIDPOINTER+1
                     LDA #$20
                     STA RGA_VIDPOINTER
-                    LDX #8
+                    LDX #12
                     JSR rga_waitsync
 scroll_fillbk_line:
                     LDA RGA_BGCOLOR             ; fill last line with background
+                    PHA
+scroll_fillbk_next:
                     LDY #210
+                    PLA
 scroll_fillbk_scan:
                     STA (RGA_VIDPOINTER),Y      ; 6 cycles
                     DEY                         ; 2 cycles
-                    BPL scroll_fillbk_scan      ; 3 cycles
-                    CLC                         ; --------- 11 * 210 = 2310
+                    BNE scroll_fillbk_scan      ; 3 cycles
+                    STA (RGA_VIDPOINTER),Y      ; --------- 11 * 210 = 2310
+                    CLC
                     LDA RGA_VIDPOINTER
                     ADC #210
                     STA RGA_VIDPOINTER
                     LDA RGA_VIDPOINTER+1
                     ADC #0
                     STA RGA_VIDPOINTER+1
+                    LDA RGA_BGCOLOR
+                    PHA
                     DEX
                     TXA
                     LSR
@@ -596,9 +602,16 @@ scroll_fillbk_scan:
                     BCS skip_fillbk_sync
                     JSR rga_waitsync
 skip_fillbk_sync:
-                    BNE scroll_fillbk_line
+                    TXA
+                    BNE scroll_fillbk_next
+                    PLA
                     RTS
 
+    ;----------------------------------------------
+    ; KERNAL RGA character output and color test
+    ;
+    ; Input: None
+    ;----------------------------------------------
 kernal_test_chars:
                     LDA #255
                     LDX #18
@@ -654,7 +667,7 @@ __irq_brk:
                     RTI
 
 startmsg:
-.byte $0A,$0D,"REICHEL R8",$0A,$0D,"6502 CPU @ 2 MHz",$0A,$0D,"32K RAM",$0A,$0D,$00
+.byte "REICHEL R8",$0A,$0D,"6502 CPU @ 2 MHz",$0A,$0D,"32K RAM",$0A,$0D,$00
 wozmonmsg:
 .byte "MONITOR (c)1976 Steve Wozniak", $0A, $0D, "ADAPTED 2017 Andreas J. Reichel", $0A, $0D, $00
 loadmsg:
