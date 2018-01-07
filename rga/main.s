@@ -152,13 +152,17 @@ dproc:
     breq vs_set_b2proc
     ldi r18, 0
     ldi r19, 1
-    ldi r17, 78 
+    ldi r17, 74 
 dproc_delayfirstpixel:
     dec r17
     brne dproc_delayfirstpixel
     ldi r20, _VDATA_LOCK_                  ; VLOCK, not BLANK
     ldi r17, 210                           ; there are 210 pixels in each line, 
-                                           ; count from 210 to 1
+; bugfix: is it first line? then only do 209 times
+    cpi r24, _LINE_BLANK1_END + 1
+    brne do210px
+    dec r17 ; only do 209 pixels
+do210px:
     out _VDATA_PORT_, r20                  ; activate VLOCK, deactivate BLANK
 dproc_nextpixel:
     out PORTD, r18                         ; counter clock pin down
