@@ -1,5 +1,7 @@
 INCLUDE = /usr/bin/share/cc65/asminc
 
+.PHONY: rom.bin
+
 OBJS = 	main.o \
 	chargen.o \
 	math2.o \
